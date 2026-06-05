@@ -75,3 +75,43 @@ function get_checkout_url() {
 
 	return is_string( $checkout_url ) ? $checkout_url : '';
 }
+
+/**
+ * Returns the configured floating cart position.
+ *
+ * @return string
+ */
+function get_cart_position() {
+	$config            = get_plugin_config();
+	$configured_value  = isset( $config['position'] ) ? (string) $config['position'] : '';
+	$allowed_positions = get_allowed_positions();
+
+	if ( in_array( $configured_value, $allowed_positions, true ) ) {
+		return $configured_value;
+	}
+
+	return 'bottom-right';
+}
+
+/**
+ * Returns the supported floating cart positions.
+ *
+ * @return string[]
+ */
+function get_allowed_positions() {
+	return array(
+		'top-left',
+		'top-right',
+		'bottom-left',
+		'bottom-right',
+	);
+}
+
+/**
+ * Resolves the floating cart position class.
+ *
+ * @return string
+ */
+function get_position_class() {
+	return 'position-' . sanitize_html_class( get_cart_position() );
+}

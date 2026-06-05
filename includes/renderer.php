@@ -32,8 +32,9 @@ function get_cart_markup() {
 		return '';
 	}
 
-	$quantity     = get_cart_quantity();
-	$checkout_url = get_checkout_url();
+	$quantity       = get_cart_quantity();
+	$checkout_url   = get_checkout_url();
+	$position_class = get_position_class();
 
 	if ( empty( $checkout_url ) ) {
 		return '';
@@ -42,7 +43,7 @@ function get_cart_markup() {
 	ob_start();
 	?>
 	<a
-		class="edd-floating-cart"
+		class="edd-floating-cart <?php echo esc_attr( $position_class ); ?>"
 		href="<?php echo esc_url( $checkout_url ); ?>"
 		aria-label="<?php esc_attr_e( 'View cart and proceed to checkout', 'edd-floating-cart' ); ?>"
 	>
