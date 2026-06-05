@@ -12,10 +12,9 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Registers WordPress hooks for the plugin.
  *
- * Scaffold only. Functional hooks will be added in later phases.
- *
  * @return void
  */
 function register_hooks() {
-	// Intentionally left empty during scaffold phase.
+	add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\register_assets' );
+	add_action( 'wp_footer', __NAMESPACE__ . '\render_floating_cart' );
 }
