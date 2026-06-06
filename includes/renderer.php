@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
  * @return void
  */
 function render_floating_cart() {
-	if ( ! should_display_floating_cart() ) {
+	if ( ! can_render_floating_cart() ) {
 		return;
 	}
 
@@ -28,15 +28,17 @@ function render_floating_cart() {
  * @return string
  */
 function get_cart_markup() {
-	if ( ! should_display_floating_cart() ) {
+	if ( ! can_render_floating_cart() ) {
 		return '';
 	}
 
 	$quantity       = get_cart_quantity();
 	$checkout_url   = get_checkout_url();
 	$show_quantity  = should_show_quantity( $quantity );
-	$cart_classes   = get_cart_classes();
+	$cart_classes   = get_cart_classes( $quantity );
 	$aria_label     = get_cart_aria_label( $quantity );
+	$hide_cart      = should_hide_cart_when_empty() && $quantity < 1;
+	$icon_markup    = get_icon_markup();
 
 	if ( empty( $checkout_url ) ) {
 		return '';
@@ -48,8 +50,12 @@ function get_cart_markup() {
 		class="<?php echo esc_attr( $cart_classes ); ?>"
 		href="<?php echo esc_url( $checkout_url ); ?>"
 		aria-label="<?php echo esc_attr( $aria_label ); ?>"
+		aria-hidden="<?php echo $hide_cart ? 'true' : 'false'; ?>"
+		<?php if ( $hide_cart ) : ?>
+			hidden
+		<?php endif; ?>
 	>
-		<span class="edd-floating-cart__icon" aria-hidden="true">&#128722;</span>
+		<?php echo $icon_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		<span
 			class="edd-floating-cart__quantity"
 			aria-hidden="<?php echo $show_quantity ? 'false' : 'true'; ?>"

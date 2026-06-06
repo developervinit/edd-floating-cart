@@ -33,15 +33,11 @@ function is_edd_available() {
  * @return bool
  */
 function should_display_floating_cart() {
-	if ( is_admin() || ! is_edd_available() ) {
+	if ( ! can_render_floating_cart() ) {
 		return false;
 	}
 
-	if ( function_exists( 'edd_is_checkout' ) && edd_is_checkout() ) {
-		return false;
-	}
-
-	if ( function_exists( 'edd_is_success_page' ) && edd_is_success_page() ) {
+	if ( should_hide_cart_when_empty() && get_cart_quantity() < 1 ) {
 		return false;
 	}
 
@@ -51,6 +47,36 @@ function should_display_floating_cart() {
 	 * @param bool $should_display Whether the cart should display.
 	 */
 	return (bool) apply_filters( 'edd_floating_cart_should_display', true );
+}
+
+/**
+ * Determines whether the floating cart shell can render on this request.
+ *
+ * @return bool
+ */
+function can_render_floating_cart() {
+	if ( is_admin() || ! is_edd_available() || ! is_floating_cart_enabled() ) {
+		return false;
+	}
+
+	if ( ! should_display_on_all_pages() ) {
+		return false;
+	}
+
+	if ( should_hide_on_checkout() && function_exists( 'edd_is_checkout' ) && edd_is_checkout() ) {
+		return false;
+	}
+
+	if ( should_hide_on_success_page() && function_exists( 'edd_is_success_page' ) && edd_is_success_page() ) {
+		return false;
+	}
+
+	/**
+	 * Filters whether the floating cart shell can render.
+	 *
+	 * @param bool $can_render Whether the shell can render.
+	 */
+	return (bool) apply_filters( 'edd_floating_cart_can_render', true );
 }
 
 /**
@@ -92,8 +118,7 @@ function get_checkout_url() {
  * @return string
  */
 function get_cart_position() {
-	$config            = get_plugin_config();
-	$configured_value  = isset( $config['position'] ) ? (string) $config['position'] : '';
+	$configured_value  = (string) get_plugin_setting( 'position' );
 	$allowed_positions = get_allowed_positions();
 
 	if ( in_array( $configured_value, $allowed_positions, true ) ) {
@@ -137,11 +162,9 @@ function get_position_class() {
  * @return string
  */
 function get_empty_cart_display() {
-	$config         = get_plugin_config();
-	$display_mode   = isset( $config['empty_cart_display'] ) ? (string) $config['empty_cart_display'] : '';
-	$allowed_modes  = array( 'icon-only' );
+	$display_mode   = (string) get_plugin_setting( 'empty_cart_display' );
 
-	if ( in_array( $display_mode, $allowed_modes, true ) ) {
+	if ( in_array( $display_mode, array( 'icon-only', 'hide-cart' ), true ) ) {
 		return $display_mode;
 	}
 
@@ -173,13 +196,19 @@ function should_show_quantity( $quantity ) {
 /**
  * Returns the CSS classes for the floating cart link.
  *
+ * @param int|null $quantity Optional cart quantity.
  * @return string
  */
-function get_cart_classes() {
+function get_cart_classes( $quantity = null ) {
+	$quantity = null === $quantity ? get_cart_quantity() : max( 0, (int) $quantity );
 	$classes = array(
 		'edd-floating-cart',
 		get_position_class(),
 	);
+
+	if ( should_hide_cart_when_empty() && $quantity < 1 ) {
+		$classes[] = 'is-hidden-when-empty';
+	}
 
 	/**
 	 * Filters the cart element CSS classes.
@@ -209,4 +238,123 @@ function get_cart_aria_label( $quantity ) {
 		_n( 'View cart with %d item and proceed to checkout', 'View cart with %d items and proceed to checkout', $quantity, 'edd-floating-cart' ),
 		$quantity
 	);
+}
+
+/**
+ * Returns whether the floating cart is enabled.
+ *
+ * @return bool
+ */
+function is_floating_cart_enabled() {
+	return ! empty( get_plugin_setting( 'enabled' ) );
+}
+
+/**
+ * Returns whether the cart should display on general frontend pages.
+ *
+ * @return bool
+ */
+function should_display_on_all_pages() {
+	return ! empty( get_plugin_setting( 'display_on_all_pages' ) );
+}
+
+/**
+ * Returns whether checkout should be hidden.
+ *
+ * @return bool
+ */
+function should_hide_on_checkout() {
+	return ! empty( get_plugin_setting( 'hide_checkout' ) );
+}
+
+/**
+ * Returns whether the success page should be hidden.
+ *
+ * @return bool
+ */
+function should_hide_on_success_page() {
+	return ! empty( get_plugin_setting( 'hide_success' ) );
+}
+
+/**
+ * Returns whether the floating cart should hide completely when empty.
+ *
+ * @return bool
+ */
+function should_hide_cart_when_empty() {
+	return 'hide-cart' === get_empty_cart_display();
+}
+
+/**
+ * Returns the horizontal offset in pixels.
+ *
+ * @return int
+ */
+function get_horizontal_offset() {
+	return max( 0, absint( get_plugin_setting( 'horizontal_offset' ) ) );
+}
+
+/**
+ * Returns the vertical offset in pixels.
+ *
+ * @return int
+ */
+function get_vertical_offset() {
+	return max( 0, absint( get_plugin_setting( 'vertical_offset' ) ) );
+}
+
+/**
+ * Returns icon configuration data.
+ *
+ * @return array{type:string,url:string}
+ */
+function get_icon_config() {
+	$icon_type = (string) get_plugin_setting( 'icon_type' );
+	$url       = '';
+
+	if ( 'custom-svg' === $icon_type ) {
+		$url = (string) get_plugin_setting( 'custom_svg_url' );
+	}
+
+	if ( 'custom-image' === $icon_type ) {
+		$url = (string) get_plugin_setting( 'custom_image_url' );
+	}
+
+	if ( empty( $url ) || ! in_array( $icon_type, array( 'custom-svg', 'custom-image' ), true ) ) {
+		return array(
+			'type' => 'default',
+			'url'  => '',
+		);
+	}
+
+	return array(
+		'type' => $icon_type,
+		'url'  => $url,
+	);
+}
+
+/**
+ * Returns the icon markup for the floating cart.
+ *
+ * @return string
+ */
+function get_icon_markup() {
+	$icon = get_icon_config();
+
+	if ( 'default' === $icon['type'] ) {
+		$markup = '<span class="edd-floating-cart__icon" aria-hidden="true">&#128722;</span>';
+	} else {
+		$markup = sprintf(
+			'<img class="edd-floating-cart__icon edd-floating-cart__icon--custom" src="%1$s" alt="" aria-hidden="true" />',
+			esc_url( $icon['url'] )
+		);
+	}
+
+	/**
+	 * Filters the icon markup used by the floating cart.
+	 *
+	 * @param string               $markup Icon markup.
+	 * @param array{type:string,url:string} $icon   Icon configuration.
+	 */
+	return apply_filters( 'edd_floating_cart_icon_markup', $markup, $icon );
 }

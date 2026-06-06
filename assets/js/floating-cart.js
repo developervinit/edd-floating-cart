@@ -23,6 +23,7 @@
 		var cart = getCart();
 		var quantityElement;
 		var parsedQuantity;
+		var isEmpty;
 		var shouldHide;
 
 		if ( ! cart ) {
@@ -36,17 +37,29 @@
 		}
 
 		parsedQuantity = parseInt( quantity, 10 );
-		shouldHide = isNaN( parsedQuantity ) || parsedQuantity < 1;
+		isEmpty = isNaN( parsedQuantity ) || parsedQuantity < 1;
+		shouldHide = !! eddFloatingCart.hideWhenEmpty && isEmpty;
 
-		if ( shouldHide ) {
-			if ( quantityElement.hidden && quantityElement.getAttribute( 'aria-hidden' ) === 'true' ) {
+		if ( isEmpty ) {
+			if ( shouldHide && cart.hidden && quantityElement.hidden && quantityElement.getAttribute( 'aria-hidden' ) === 'true' ) {
 				return;
 			}
 
+			cart.hidden = shouldHide;
+			cart.setAttribute( 'aria-hidden', shouldHide ? 'true' : 'false' );
+			quantityElement.textContent = '0';
 			quantityElement.hidden = true;
 			quantityElement.setAttribute( 'aria-hidden', 'true' );
 			cart.setAttribute( 'aria-label', getAriaLabel( 0 ) );
 			return;
+		}
+
+		if ( cart.hidden ) {
+			cart.hidden = false;
+		}
+
+		if ( cart.getAttribute( 'aria-hidden' ) !== 'false' ) {
+			cart.setAttribute( 'aria-hidden', 'false' );
 		}
 
 		if ( quantityElement.textContent !== String( parsedQuantity ) ) {

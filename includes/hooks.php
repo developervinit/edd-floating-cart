@@ -15,9 +15,12 @@ defined( 'ABSPATH' ) || exit;
  * @return void
  */
 function register_hooks() {
+	register_settings();
+
 	add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\register_assets' );
 	add_action( 'wp_footer', __NAMESPACE__ . '\render_floating_cart' );
 	add_action( 'admin_notices', __NAMESPACE__ . '\maybe_render_admin_notice' );
+	add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\enqueue_settings_assets' );
 }
 
 /**

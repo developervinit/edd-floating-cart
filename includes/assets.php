@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
  * @return void
  */
 function register_assets() {
-	if ( is_admin() || ! should_display_floating_cart() ) {
+	if ( is_admin() || ! can_render_floating_cart() ) {
 		return;
 	}
 
@@ -24,6 +24,15 @@ function register_assets() {
 		EDD_FLOATING_CART_URL . 'assets/css/floating-cart.css',
 		array(),
 		get_version()
+	);
+
+	wp_add_inline_style(
+		'edd-floating-cart',
+		sprintf(
+			'.edd-floating-cart{--edd-floating-cart-offset-x:%1$dpx;--edd-floating-cart-offset-y:%2$dpx;}',
+			get_horizontal_offset(),
+			get_vertical_offset()
+		)
 	);
 
 	wp_enqueue_script(
@@ -38,9 +47,10 @@ function register_assets() {
 		'edd-floating-cart',
 		'eddFloatingCart',
 		array(
-			'ariaLabelEmpty'  => __( 'View cart and proceed to checkout', 'edd-floating-cart' ),
-			'ariaLabelSingle' => __( 'View cart with 1 item and proceed to checkout', 'edd-floating-cart' ),
-			'ariaLabelPlural' => __( 'View cart with %d items and proceed to checkout', 'edd-floating-cart' ),
+			'ariaLabelEmpty'   => __( 'View cart and proceed to checkout', 'edd-floating-cart' ),
+			'ariaLabelSingle'  => __( 'View cart with 1 item and proceed to checkout', 'edd-floating-cart' ),
+			'ariaLabelPlural'  => __( 'View cart with %d items and proceed to checkout', 'edd-floating-cart' ),
+			'hideWhenEmpty'    => should_hide_cart_when_empty(),
 		)
 	);
 }
