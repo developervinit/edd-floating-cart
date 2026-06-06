@@ -3,6 +3,7 @@
 	align-items: center;
 	background: #111111;
 	border-radius: 999px;
+	box-sizing: border-box;
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
 	color: #ffffff;
 	display: inline-flex;
@@ -12,36 +13,44 @@
 	justify-content: center;
 	min-height: 3rem;
 	min-width: 3rem;
+	max-width: calc( 100vw - ( var( --edd-floating-cart-offset ) * 2 ) );
 	padding: 0.75rem 1rem;
 	position: fixed;
 	text-decoration: none;
+	touch-action: manipulation;
 	z-index: 9999;
 }
 
 .edd-floating-cart.position-top-left {
-	left: var( --edd-floating-cart-offset );
-	top: var( --edd-floating-cart-offset );
+	left: max( var( --edd-floating-cart-offset ), env( safe-area-inset-left ) );
+	top: max( var( --edd-floating-cart-offset ), env( safe-area-inset-top ) );
 }
 
 .edd-floating-cart.position-top-right {
-	right: var( --edd-floating-cart-offset );
-	top: var( --edd-floating-cart-offset );
+	right: max( var( --edd-floating-cart-offset ), env( safe-area-inset-right ) );
+	top: max( var( --edd-floating-cart-offset ), env( safe-area-inset-top ) );
 }
 
 .edd-floating-cart.position-bottom-left {
-	bottom: var( --edd-floating-cart-offset );
-	left: var( --edd-floating-cart-offset );
+	bottom: max( var( --edd-floating-cart-offset ), env( safe-area-inset-bottom ) );
+	left: max( var( --edd-floating-cart-offset ), env( safe-area-inset-left ) );
 }
 
 .edd-floating-cart.position-bottom-right {
-	bottom: var( --edd-floating-cart-offset );
-	right: var( --edd-floating-cart-offset );
+	bottom: max( var( --edd-floating-cart-offset ), env( safe-area-inset-bottom ) );
+	right: max( var( --edd-floating-cart-offset ), env( safe-area-inset-right ) );
 }
 
 .edd-floating-cart:focus,
+.edd-floating-cart:focus-visible,
 .edd-floating-cart:hover {
 	color: #ffffff;
 	text-decoration: none;
+}
+
+.edd-floating-cart:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 3px;
 }
 
 .edd-floating-cart__icon {
@@ -62,6 +71,8 @@
 @media (max-width: 600px) {
 	.edd-floating-cart {
 		--edd-floating-cart-offset: 16px;
-		padding: 0.75rem 0.875rem;
+		min-height: 3.25rem;
+		min-width: 3.25rem;
+		padding: 0.875rem 1rem;
 	}
 }

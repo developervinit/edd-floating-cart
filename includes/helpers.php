@@ -45,7 +45,12 @@ function should_display_floating_cart() {
 		return false;
 	}
 
-	return true;
+	/**
+	 * Filters whether the floating cart should render on the current request.
+	 *
+	 * @param bool $should_display Whether the cart should display.
+	 */
+	return (bool) apply_filters( 'edd_floating_cart_should_display', true );
 }
 
 /**
@@ -73,7 +78,12 @@ function get_checkout_url() {
 
 	$checkout_url = edd_get_checkout_uri();
 
-	return is_string( $checkout_url ) ? $checkout_url : '';
+	/**
+	 * Filters the checkout URL used by the floating cart.
+	 *
+	 * @param string $checkout_url Checkout URL.
+	 */
+	return apply_filters( 'edd_floating_cart_checkout_url', is_string( $checkout_url ) ? $checkout_url : '' );
 }
 
 /**
@@ -113,5 +123,90 @@ function get_allowed_positions() {
  * @return string
  */
 function get_position_class() {
-	return 'position-' . sanitize_html_class( get_cart_position() );
+	/**
+	 * Filters the resolved position class.
+	 *
+	 * @param string $position_class Position class.
+	 */
+	return apply_filters( 'edd_floating_cart_position_class', 'position-' . sanitize_html_class( get_cart_position() ) );
+}
+
+/**
+ * Returns how an empty cart should be displayed.
+ *
+ * @return string
+ */
+function get_empty_cart_display() {
+	$config         = get_plugin_config();
+	$display_mode   = isset( $config['empty_cart_display'] ) ? (string) $config['empty_cart_display'] : '';
+	$allowed_modes  = array( 'icon-only' );
+
+	if ( in_array( $display_mode, $allowed_modes, true ) ) {
+		return $display_mode;
+	}
+
+	return 'icon-only';
+}
+
+/**
+ * Determines whether the quantity badge should be visible.
+ *
+ * @param int $quantity Cart quantity.
+ * @return bool
+ */
+function should_show_quantity( $quantity ) {
+	$quantity = max( 0, (int) $quantity );
+
+	if ( 0 === $quantity && 'icon-only' === get_empty_cart_display() ) {
+		return false;
+	}
+
+	/**
+	 * Filters whether the quantity badge should be shown.
+	 *
+	 * @param bool $show_quantity Whether to show quantity.
+	 * @param int  $quantity      Current cart quantity.
+	 */
+	return (bool) apply_filters( 'edd_floating_cart_show_quantity', $quantity > 0, $quantity );
+}
+
+/**
+ * Returns the CSS classes for the floating cart link.
+ *
+ * @return string
+ */
+function get_cart_classes() {
+	$classes = array(
+		'edd-floating-cart',
+		get_position_class(),
+	);
+
+	/**
+	 * Filters the cart element CSS classes.
+	 *
+	 * @param string[] $classes Cart CSS classes.
+	 */
+	$classes = apply_filters( 'edd_floating_cart_classes', $classes );
+
+	return implode( ' ', array_map( 'sanitize_html_class', array_filter( $classes ) ) );
+}
+
+/**
+ * Returns the accessible label for the floating cart link.
+ *
+ * @param int $quantity Cart quantity.
+ * @return string
+ */
+function get_cart_aria_label( $quantity ) {
+	$quantity = max( 0, (int) $quantity );
+
+	if ( $quantity < 1 ) {
+		return __( 'View cart and proceed to checkout', 'edd-floating-cart' );
+	}
+
+	return sprintf(
+		/* translators: %d: cart quantity */
+		_n( 'View cart with %d item and proceed to checkout', 'View cart with %d items and proceed to checkout', $quantity, 'edd-floating-cart' ),
+		$quantity
+	);
 }

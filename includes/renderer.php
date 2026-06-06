@@ -34,7 +34,9 @@ function get_cart_markup() {
 
 	$quantity       = get_cart_quantity();
 	$checkout_url   = get_checkout_url();
-	$position_class = get_position_class();
+	$show_quantity  = should_show_quantity( $quantity );
+	$cart_classes   = get_cart_classes();
+	$aria_label     = get_cart_aria_label( $quantity );
 
 	if ( empty( $checkout_url ) ) {
 		return '';
@@ -43,14 +45,15 @@ function get_cart_markup() {
 	ob_start();
 	?>
 	<a
-		class="edd-floating-cart <?php echo esc_attr( $position_class ); ?>"
+		class="<?php echo esc_attr( $cart_classes ); ?>"
 		href="<?php echo esc_url( $checkout_url ); ?>"
-		aria-label="<?php esc_attr_e( 'View cart and proceed to checkout', 'edd-floating-cart' ); ?>"
+		aria-label="<?php echo esc_attr( $aria_label ); ?>"
 	>
 		<span class="edd-floating-cart__icon" aria-hidden="true">&#128722;</span>
 		<span
 			class="edd-floating-cart__quantity"
-			<?php if ( $quantity < 1 ) : ?>
+			aria-hidden="<?php echo $show_quantity ? 'false' : 'true'; ?>"
+			<?php if ( ! $show_quantity ) : ?>
 				hidden
 			<?php endif; ?>
 		>
@@ -59,5 +62,12 @@ function get_cart_markup() {
 	</a>
 	<?php
 
-	return (string) ob_get_clean();
+	$markup = (string) ob_get_clean();
+
+	/**
+	 * Filters the final floating cart markup.
+	 *
+	 * @param string $markup Cart markup.
+	 */
+	return apply_filters( 'edd_floating_cart_markup', $markup );
 }

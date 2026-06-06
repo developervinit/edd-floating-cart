@@ -18,9 +18,20 @@ defined( 'ABSPATH' ) || exit;
  * @return array<string, string>
  */
 function get_plugin_config() {
-	return array(
+	$config = array(
 		'position' => 'bottom-right',
+		'empty_cart_display' => 'icon-only',
 	);
+
+	/**
+	 * Filters the base plugin configuration.
+	 *
+	 * This keeps the current implementation simple while leaving a clean
+	 * extension point for future settings storage.
+	 *
+	 * @param array<string, string> $config Plugin configuration.
+	 */
+	return apply_filters( 'edd_floating_cart_config', $config );
 }
 
 /**
